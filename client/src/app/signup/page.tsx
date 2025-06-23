@@ -1,19 +1,83 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Image from 'next/image';
 import Link from "next/link";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import { cn } from "@/lib/utils";
+import { z } from "zod";
+import { useRouter } from "next/navigation";
 import {
   IconBrandGoogle
 } from "@tabler/icons-react";
 
+const signupSchema = z.object({
+  username: z.string().min(1, {message: "Username is required"}),
+  email: z.string().email({message: "Invalid email address"}),
+  password: z.string().min(8, {message: "Password must be at least 8 characters"}),
+  confirmpassword: z.string().min(8, {message: "Password must be at least 8 characters"}),
+}).refine((data) => data.password === data.confirmpassword, {
+  message: "Passwords don't match",
+  path: ["confirmpassword"],
+});
+
+type SignUpFormData = z.infer<typeof signupSchema>;
+
 export default function SignupForm() {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Form submitted");
+  const router = useRouter();
+
+  const [formData, setFormData] = useState<SignUpFormData>({
+    username: "",
+    email: "",
+    password: "",
+    confirmpassword: "",
+  });
+  const [errors, setErrors] = useState<z.ZodIssue[]>([]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const {id, value} = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [id]: value,
+    }));
   };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErrors([]);
+
+    try {
+      signupSchema.parse(formData);
+      const response = await fetch("http://localhost:8080/auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        router.push('/login');
+      }
+      else {
+        console.log("signup failed");
+      }
+    }
+    catch (e) {
+      if (e instanceof z.ZodError) {
+        setErrors(e.errors);
+      }
+      else {
+        console.error("error while submitting", e);
+      }
+    }
+  };
+
+  const getErrorMessage = (field: keyof SignUpFormData) => {
+    const error = errors.find((err) => err.path[0] === field);
+    return error ? error.message : null;
+  }
+
   return (
     <div className="font-[family-name:var(--font-geist-mono)] bg-[#070707] min-h-screen flex flex-col">
       <header className="p-6">
@@ -44,33 +108,57 @@ export default function SignupForm() {
               <form className="" onSubmit={handleSubmit}>
                 <div className="mb-4 flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
                   <LabelInputContainer>
-                    <Label htmlFor="firstname">First name</Label>
-                    <Input id="firstname" placeholder="Tyler" type="text" />
-                  </LabelInputContainer>
-                  <LabelInputContainer>
-                    <Label htmlFor="lastname">Last name</Label>
-                    <Input id="lastname" placeholder="Durden" type="text" />
+                    <Label htmlFor="username">Username</Label>
+                    <Input 
+                      id="username" 
+                      placeholder="johndoe123" 
+                      type="text"
+                      value={formData.username}
+                      onChange={handleChange} />
+                      {getErrorMessage("username") && (
+                        <p className="text-red-500 text-xs mt-1">{getErrorMessage("username")}</p>
+                      )}
                   </LabelInputContainer>
                 </div>
                 <LabelInputContainer className="mb-4">
                   <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" placeholder="projectmayhem@fc.com" type="email" />
+                  <Input 
+                    id="email" 
+                    placeholder="johndoe@gmail.com" 
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange} />
+                    {getErrorMessage("email") && (
+                      <p className="text-red-500 text-xs mt-1">{getErrorMessage("email")}</p>
+                    )}
                 </LabelInputContainer>
                 <LabelInputContainer className="mb-4">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" placeholder="••••••••" type="password" />
+                  <Input 
+                    id="password" 
+                    placeholder="••••••••" 
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange} />
+                    {getErrorMessage("password") && (
+                      <p className="text-red-500 text-xs mt-1">{getErrorMessage("password")}</p>
+                    )}
                 </LabelInputContainer>
                 <LabelInputContainer className="mb-8">
                   <Label htmlFor="confirmpassword">Confirm password</Label>
                   <Input
                     id="confirmpassword"
                     placeholder="••••••••"
-                    type="confirmpassword"
-                  />
+                    type="password"
+                    value={formData.confirmpassword}
+                    onChange={handleChange} />
+                    {getErrorMessage("confirmpassword") && (
+                      <p className="text-red-500 text-xs mt-1">{getErrorMessage("confirmpassword")}</p>
+                    )}
                 </LabelInputContainer>
                 
                 <button
-                  className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset]"
+                  className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset] cursor-pointer"
                   type="submit"
                 >
                   Sign up
