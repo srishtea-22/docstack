@@ -35,6 +35,7 @@ export default function LoginForm() {
                 objectPosition: 'bottom left' 
               }}
               priority 
+              sizes="(max-width: 639px) 250px, (max-width: 767px) 400px, 600px"
             />
         </div>
 

@@ -12,7 +12,7 @@ const userSchema = z.object({
   password: z.string().min(8, {message: "Password must be at least 8 characters"}),
 });
 
-router.post('/', async (req, res) => {
+router.post('/signup', async (req, res) => {
     try {
         const {username, email, password} = userSchema.parse(req.body);
 

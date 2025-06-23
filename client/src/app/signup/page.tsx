@@ -48,7 +48,7 @@ export default function SignupForm() {
 
     try {
       signupSchema.parse(formData);
-      const response = await fetch("http://localhost:8080/auth", {
+      const response = await fetch("http://localhost:8080/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -99,6 +99,7 @@ export default function SignupForm() {
                 objectPosition: 'bottom left' 
               }}
               priority 
+              sizes="(max-width: 639px) 250px, (max-width: 767px) 400px, 600px"
             />
         </div>
 
