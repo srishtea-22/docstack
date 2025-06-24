@@ -33,6 +33,7 @@ export default function SignupForm() {
     confirmpassword: "",
   });
   const [errors, setErrors] = useState<z.ZodIssue[]>([]);
+  const [serverError, setServerError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const {id, value} = e.target;
@@ -45,6 +46,7 @@ export default function SignupForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrors([]);
+    setServerError("");
 
     try {
       signupSchema.parse(formData);
@@ -56,11 +58,13 @@ export default function SignupForm() {
         body: JSON.stringify(formData)
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         router.push('/login');
       }
       else {
-        console.log("signup failed");
+        setServerError(data.message || "Signup failed")
       }
     }
     catch (e) {
@@ -68,7 +72,7 @@ export default function SignupForm() {
         setErrors(e.errors);
       }
       else {
-        console.error("error while submitting", e);
+        setServerError("Something went wrong")
       }
     }
   };
@@ -157,6 +161,10 @@ export default function SignupForm() {
                       <p className="text-red-500 text-xs mt-1">{getErrorMessage("confirmpassword")}</p>
                     )}
                 </LabelInputContainer>
+
+                {serverError && (
+                  <p className="text-red-500 text-sm mb-4 text-center">{serverError}</p>
+                )}
                 
                 <button
                   className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset] cursor-pointer"
