@@ -1,6 +1,6 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
-import { hash } from "bcrypt";
+import { hash, compare } from "bcrypt";
 import { z } from "zod";
 
 const router = express.Router();
@@ -10,6 +10,11 @@ const userSchema = z.object({
   username: z.string().min(1, {message: "Username is required"}),
   email: z.string().email({message: "Invalid email address"}),
   password: z.string().min(8, {message: "Password must be at least 8 characters"}),
+});
+
+const loginSchema = z.object({
+    email: z.string().email({message: "Invalid email address"}),
+    password: z.string().min(1),
 });
 
 router.post('/signup', async (req, res) => {
@@ -53,5 +58,45 @@ router.post('/signup', async (req, res) => {
         console.error("error while post request", e);
     }
 })
+
+router.post('/login', async (req, res) => {
+    try {
+        const {email, password} = loginSchema.parse(req.body);
+        const user = await prisma.user.findUnique({where: {email}});
+        
+        if (!user) {
+            return res.status(401).json({message: "Invalid credentials", user: null});
+        }
+
+        const isValid = await compare(password, user.password);
+        if (!isValid) {
+            return res.status(401).json({message: "Invalid credentials", user: null});
+        }
+
+        req.session.user = {id: user.id, username: user.username};
+
+        res.status(200).json({message: "Login successful", user: {username: user.username}});
+    }
+    catch (e) {
+        console.error("Login error", e);
+        res.status(500).json({message: "Internal server error", user: null});
+    }
+});
+
+router.get('/user', (req, res) => {
+    if (req.session.user) {
+        res.json({user: req.session.user});
+    }
+    else {
+        res.status(401).json({user: null, message: "Not logged in"});
+    }
+});
+
+router.post('/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.clearCookie("connect.sid");
+        res.status(200).json({message: "Logged out"});
+    });
+});
 
 export default router;
