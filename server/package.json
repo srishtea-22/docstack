@@ -14,11 +14,13 @@
   "dependencies": {
     "@prisma/client": "^6.10.1",
     "@quixo3/prisma-session-store": "^3.1.13",
+    "@supabase/supabase-js": "^2.50.1",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
+    "multer": "^2.0.1",
     "zod": "^3.25.67"
   },
   "devDependencies": {

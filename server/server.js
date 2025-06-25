@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { PrismaSessionStore } from "@quixo3/prisma-session-store";
 import { PrismaClient } from "@prisma/client";
 import session from "express-session";
+import uploadRoutes from "./routes/upload.js"
 
 const app = express();
 const prisma = new PrismaClient();
@@ -26,6 +27,7 @@ app.use(session({
         httpOnly: true,
         secure: false,          // true in production
         maxAge: 1000 * 60 * 60 * 24,
+        sameSite: "lax",
     },
     store: new PrismaSessionStore(prisma, {
         checkPeriod: 2 * 60 * 1000,
@@ -34,6 +36,7 @@ app.use(session({
 }));
 
 app.use("/auth", authRoutes);
+app.use("/", uploadRoutes); 
 
 app.listen(PORT, () => {
     console.log("server started");
