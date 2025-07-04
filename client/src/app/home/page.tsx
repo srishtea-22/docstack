@@ -2,12 +2,21 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
+interface Entity {
+  id: number;
+  name: string;
+  mimeType: string | null;
+  size: number | null;
+  createdAt: string;
+  publicURL: string | null;
+}
+
 export default function HomePage() {
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [userFiles, setUserFiles] = useState<Entity[]>([]);
+  const [loadingFiles, setLoadingFiles] = useState(true);
+  const [filesError, setFilesError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -23,38 +32,39 @@ export default function HomePage() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (username) {
+      setLoadingFiles(true);
+      fetch("http://localhost:8080/fetch/files", {
+        credentials: "include",
+      })
+      .then((res) => {
+        if (!res.ok) throw new Error("failed to fetch files");
+        return res.json();
+      })
+      .then((data: Entity[]) => {
+        setUserFiles(data);
+      })
+      .catch((error) => {
+        console.error("error fetching files ", error);
+        setFilesError(error.message || "could not load files");
+      })
+      .finally(() => {
+        setLoadingFiles(false);
+      })
+    }
+    else if (!loading) {
+      setUserFiles([]);
+      setLoadingFiles(false);
+    }
+  }, [username, loading]);
+
   const handleLogout = async () => {
     await fetch("http://localhost:8080/auth/logout", {
       method: "POST",
       credentials: "include",
     });
     router.push("/login");
-  };
-
-  const handleUpload = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!file) return;
-
-    setUploading(true);
-    setMessage(null);
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const res = await fetch("http://localhost:8080/upload", {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      setMessage("File uploaded successfully!");
-    } else {
-      setMessage(data.error || "Upload failed");
-    }
-
-    setUploading(false);
   };
 
   if (loading) return <p>Loading...</p>;
@@ -90,20 +100,26 @@ export default function HomePage() {
           </button>
         </header>
             <div className="flex-1 overflow-auto text-lg bg-[#1b1b1b] mt-8 mr-4 rounded-2xl p-4">
+            <h2 className="text-xl mb-4">Your Files: </h2>
+            {loadingFiles ? (
+              <p>Loading files</p>
+            ) : filesError ? (
+              <p>{filesError}</p>
+            ) : userFiles.length === 0 ? (
+              <p>No files, start by uploading one!</p>
+            ) : (
+                <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {userFiles.map((file) => (
+                    <li key={file.id} className="bg-[#2a2a2a] p-4 rounded-lg shadow-md">
+                      <p className="text-lg font-semibold truncate">{file.name}</p>
+                      <p className="text-sm text-gray-400">Type: {file.mimeType || 'N/A'}</p>
+                      <p className="text-sm text-gray-400">Size: {file.size ? (file.size / 1024).toFixed(2) : 'N/A'} KB</p>
+                      <p className="text-sm text-gray-400">Uploaded: {new Date(file.createdAt).toLocaleDateString()}</p>
+                    </li>
+                  ))}
+                </ul>
+            )}
             </div>
-          {/* <form onSubmit={handleUpload} className="my-4 flex flex-col space-y-2">
-            <input
-              type="file"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-            />
-            <button
-              type="submit"
-              disabled={uploading}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer"
-            >
-              {uploading ? "Uploading..." : "Add File"}
-            </button>
-          </form> */}
         </>
       ) : (
         <h1 className="text-xl text-red-500">You are not logged in</h1>

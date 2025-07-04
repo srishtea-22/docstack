@@ -6,6 +6,7 @@ import { PrismaSessionStore } from "@quixo3/prisma-session-store";
 import { PrismaClient } from "@prisma/client";
 import session from "express-session";
 import uploadRoutes from "./routes/upload.js"
+import fetchRoutes from "./routes/fetch.js"
 
 const app = express();
 const prisma = new PrismaClient();
@@ -37,6 +38,7 @@ app.use(session({
 
 app.use("/auth", authRoutes);
 app.use("/", uploadRoutes); 
+app.use("/fetch", fetchRoutes);
 
 app.listen(PORT, () => {
     console.log("server started");
