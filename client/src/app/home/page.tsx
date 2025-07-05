@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import NewFileModal from "@/components/NewFileModal";
 
 interface Entity {
   id: number;
@@ -20,6 +21,7 @@ export default function HomePage() {
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -105,22 +107,28 @@ export default function HomePage() {
           <h1 className="text-3xl text-white flex items-baseline mb-6">docstack
             <span className="text-4xl text-orange-500 font-bold">.</span>
           </h1>
-            <form onSubmit={handleUpload} className="my-4 flex flex-col space-y-2">
-              <input
-                type="file"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-              />
               <button
-                type="submit"
-                disabled={uploading}
-                className="group w-24 p-2 ml-6 bg-white text-black hover:bg-black hover:text-white rounded-lg flex items-center justify-center gap-1 transition duration-300 ease-in-out transform cursor-pointer"
+                onClick={() => setShowModal(true)}
+                className="group w-full p-2 mb-4 bg-black text-white hover:bg-white hover:text-black outline outline-1 outline-white rounded-lg flex items-center justify-center gap-1 transition duration-300 ease-in-out transform cursor-pointer"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" className="fill-black group-hover:fill-white transition-colors duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" className="fill-white group-hover:fill-black transition-colors duration-300">
                   <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
-                </svg>
-                {uploading ? "Uploading..." : "NEW"}
+                </svg>File
               </button>
-            </form>
+              
+              <button
+                className="group w-full p-2 mb-4 bg-black text-white hover:bg-white hover:text-black outline outline-1 outline-white rounded-lg flex items-center justify-center gap-1 transition duration-300 ease-in-out transform cursor-pointer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" className="fill-white group-hover:fill-black transition-colors duration-300">
+                  <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
+                </svg>Folder
+              </button>
+              <NewFileModal
+                show={showModal} 
+                close={() => setShowModal(false)} 
+                handleUpload={handleUpload} 
+                setFile={setFile} 
+                uploading={uploading}/>
           <div>
             {/* breadcrumbs */}
           </div>
