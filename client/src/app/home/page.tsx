@@ -17,6 +17,9 @@ export default function HomePage() {
   const [userFiles, setUserFiles] = useState<Entity[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [filesError, setFilesError] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -67,6 +70,33 @@ export default function HomePage() {
     router.push("/login");
   };
 
+  const handleUpload = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!file) return;
+
+    setUploading(true);
+    setMessage(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("http://localhost:8080/upload", {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      setMessage("file uploaded successfully");
+    }
+    else {
+      setMessage(data.error || "upload failed");
+    }
+    setUploading(false);
+  };
+
   if (loading) return <p>Loading...</p>;
 
   return (
@@ -75,10 +105,22 @@ export default function HomePage() {
           <h1 className="text-3xl text-white flex items-baseline mb-6">docstack
             <span className="text-4xl text-orange-500 font-bold">.</span>
           </h1>
-          <button className="group w-24 p-2 ml-6 bg-white text-black hover:bg-black hover:text-white rounded-lg flex items-center justify-center gap-1 transition duration-300 ease-in-out transform cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" className="fill-black group-hover:fill-white transtion-colors duration-300"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
-            NEW
-          </button>
+            <form onSubmit={handleUpload} className="my-4 flex flex-col space-y-2">
+              <input
+                type="file"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+              <button
+                type="submit"
+                disabled={uploading}
+                className="group w-24 p-2 ml-6 bg-white text-black hover:bg-black hover:text-white rounded-lg flex items-center justify-center gap-1 transition duration-300 ease-in-out transform cursor-pointer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" className="fill-black group-hover:fill-white transition-colors duration-300">
+                  <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
+                </svg>
+                {uploading ? "Uploading..." : "NEW"}
+              </button>
+            </form>
           <div>
             {/* breadcrumbs */}
           </div>
@@ -100,7 +142,6 @@ export default function HomePage() {
           </button>
         </header>
             <div className="flex-1 overflow-auto text-lg bg-[#1b1b1b] mt-8 mr-4 rounded-2xl p-4">
-            <h2 className="text-xl mb-4">Your Files: </h2>
             {loadingFiles ? (
               <p>Loading files</p>
             ) : filesError ? (
@@ -108,16 +149,22 @@ export default function HomePage() {
             ) : userFiles.length === 0 ? (
               <p>No files, start by uploading one!</p>
             ) : (
-                <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="p-4 grid grid-cols-[4fr_1fr_1fr_1fr] gap-2">
+                    <p className="text-base">Name</p>
+                    <p className="text-sm">Type</p>
+                    <p className="text-sm">Size</p>
+                    <p className="text-sm">Created</p>
+                    </div>
                   {userFiles.map((file) => (
-                    <li key={file.id} className="bg-[#2a2a2a] p-4 rounded-lg shadow-md">
-                      <p className="text-lg font-semibold truncate">{file.name}</p>
-                      <p className="text-sm text-gray-400">Type: {file.mimeType || 'N/A'}</p>
-                      <p className="text-sm text-gray-400">Size: {file.size ? (file.size / 1024).toFixed(2) : 'N/A'} KB</p>
-                      <p className="text-sm text-gray-400">Uploaded: {new Date(file.createdAt).toLocaleDateString()}</p>
-                    </li>
+                    <div key={file.id} className="bg-[#2a2a2a] hover:bg-[#343434] p-4 rounded-lg shadow-md grid grid-cols-[4fr_1fr_1fr_1fr] gap-4 cursor-pointer">
+                      <p className="text-base font-semibold truncate">{file.name}</p>
+                      <p className="text-sm text-[#fceeea]">{file.mimeType || '-'}</p>
+                      <p className="text-sm text-[#fceeea]">{file.size ? (file.size / 1024).toFixed(2) : '-'} KB</p>
+                      <p className="text-sm text-[#fceeea]">{new Date(file.createdAt).toLocaleDateString()}</p>
+                    </div>
                   ))}
-                </ul>
+                </div>
             )}
             </div>
         </>
