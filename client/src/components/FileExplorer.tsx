@@ -82,6 +82,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
 
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("parentId", parentId || "");
 
     const res = await fetch("http://localhost:8080/upload/file", {
       method: "POST",
@@ -101,7 +102,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
       method: "POST",
       headers: { 'Content-Type': 'application/json'},
       credentials: 'include',
-      body: JSON.stringify({folder}),
+      body: JSON.stringify({folder, parentId: parentId || null,}),
     });
 
     setFolder("");

@@ -19,6 +19,7 @@ router.post('/file', upload.single('file'), async (req, res) => {
 
     const userId = req.session.user.id;
     const file = req.file;
+    const parentId = req.body.parentId ? Number(req.body.parentId) : null;
     const filePath = `user-${userId}/${Date.now()}-${file.originalname}`;
 
   const { data: uploadData, error: uploadError } = await supabase.storage
@@ -37,7 +38,8 @@ router.post('/file', upload.single('file'), async (req, res) => {
         mimeType: file.mimetype,
         size: file.size,
         filePath: uploadData.path,
-        userId: userId
+        userId: userId,
+        parentId: parentId,
       },
     });
     return res.json({ message: "File uploaded successfully", path: uploadData.path, entityId: newEntity.id });
