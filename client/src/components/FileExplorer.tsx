@@ -119,12 +119,12 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   return (
     <div className="flex h-screen font-[family-name:var(--font-geist-mono)]">
       <aside className="w-52 p-4 flex flex-col">
-          <h1 className="text-3xl text-white flex items-baseline mb-6">docstack
+          <h1 className="text-3xl text-white flex items-baseline mb-6 ml-2">docstack
             <span className="text-4xl text-orange-500 font-bold">.</span>
           </h1>
               <button
                 onClick={() => setShowFileModal(true)}
-                className="group w-full p-2 mb-4 bg-black text-white hover:bg-white hover:text-black outline outline-1 outline-white rounded-lg flex items-center justify-center gap-1 transition duration-300 ease-in-out transform cursor-pointer"
+                className="group w-full py-1 mb-4 bg-black text-white hover:bg-white hover:text-black outline outline-1 outline-white rounded-lg flex items-center justify-center gap-1 transition duration-300 ease-in-out transform cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" className="fill-white group-hover:fill-black transition-colors duration-300">
                   <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
@@ -139,7 +139,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
               
               <button
               onClick={() => setShowFolderModal(true)}
-                className="group w-full p-2 mb-4 bg-black text-white hover:bg-white hover:text-black outline outline-1 outline-white rounded-lg flex items-center justify-center gap-1 transition duration-300 ease-in-out transform cursor-pointer"
+                className="group w-full py-1 mb-4 bg-black text-white hover:bg-white hover:text-black outline outline-1 outline-white rounded-lg flex items-center justify-center gap-1 transition duration-300 ease-in-out transform cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" className="fill-white group-hover:fill-black transition-colors duration-300">
                   <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
@@ -192,8 +192,8 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                     onClick={() => handleEntityClick(file)}>
                       <p className="text-base font-semibold truncate">{file.name}</p>
                       <p className="text-sm text-[#fceeea]">{file.mimeType || 'folder'}</p>
-                      <p className="text-sm text-[#fceeea]">{file.size ? (file.size / 1024).toFixed(2) + ' KB': '-'}</p>
-                      <p className="text-sm text-[#fceeea]">{new Date(file.createdAt).toLocaleDateString()}</p>
+                      <p className="text-sm text-[#fceeea]">{file.size ? (file.size / 1024).toFixed(2) + ' kB': '-'}</p>
+                      <p className="text-sm text-[#fceeea]">{new Date(file.createdAt).toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"})}</p>
                     </div>
                   ))}
                 </div>

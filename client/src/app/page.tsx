@@ -34,7 +34,7 @@ export default function Home() {
           <p className="text-l md:text-2xl leading-tight mb-8 text-white">
             Convenient and secure file access to all your files in one place.
           </p>
-          <button className="bg-white text-black px-8 py-3 rounded-full text-l md:text-lg font-semibold hover:bg-black hover:text-white transition duration-300 cursor-pointer"
+          <button className="bg-white text-black px-8 py-3 rounded-full text-l md:text-lg font-semibold hover:bg-black hover:text-white transition duration-300 cursor-pointer hover:outline hover:outline-1 hover:outline-white"
           onClick={() => router.push("/login")}>
             Get started
           </button>
