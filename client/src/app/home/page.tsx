@@ -16,9 +16,9 @@ interface Entity {
 export default function HomePage() {
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userFiles, setUserFiles] = useState<Entity[]>([]);
-  const [loadingFiles, setLoadingFiles] = useState(true);
-  const [filesError, setFilesError] = useState<string | null>(null);
+  const [userEntities, setUserEntities] = useState<Entity[]>([]);
+  const [loadingEntites, setLoadingEntities] = useState(true);
+  const [entitesError, setEntitiesError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [folder, setFolder] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -41,8 +41,8 @@ export default function HomePage() {
 
   useEffect(() => {
     if (username) {
-      setLoadingFiles(true);
-      fetch("http://localhost:8080/fetch/files", {
+      setLoadingEntities(true);
+      fetch("http://localhost:8080/fetch", {
         credentials: "include",
       })
       .then((res) => {
@@ -50,19 +50,19 @@ export default function HomePage() {
         return res.json();
       })
       .then((data: Entity[]) => {
-        setUserFiles(data);
+        setUserEntities(data);
       })
       .catch((error) => {
         console.error("error fetching files ", error);
-        setFilesError(error.message || "could not load files");
+        setEntitiesError(error.message || "could not load files");
       })
       .finally(() => {
-        setLoadingFiles(false);
+        setLoadingEntities(false);
       })
     }
     else if (!loading) {
-      setUserFiles([]);
-      setLoadingFiles(false);
+      setUserEntities([]);
+      setLoadingEntities(false);
     }
   }, [username, loading]);
 
@@ -166,11 +166,11 @@ export default function HomePage() {
           </button>
         </header>
             <div className="flex-1 overflow-auto text-lg bg-[#1b1b1b] mt-8 mr-4 rounded-2xl p-4">
-            {loadingFiles ? (
+            {loadingEntites ? (
               <p>Loading files</p>
-            ) : filesError ? (
-              <p>{filesError}</p>
-            ) : userFiles.length === 0 ? (
+            ) : entitesError ? (
+              <p>{entitesError}</p>
+            ) : userEntities.length === 0 ? (
               <p>No files, start by uploading one!</p>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
@@ -180,11 +180,11 @@ export default function HomePage() {
                     <p className="text-sm">Size</p>
                     <p className="text-sm">Created</p>
                     </div>
-                  {userFiles.map((file) => (
+                  {userEntities.map((file) => (
                     <div key={file.id} className="bg-[#2a2a2a] hover:bg-[#343434] p-4 rounded-lg shadow-md grid grid-cols-[4fr_1fr_1fr_1fr] gap-4 cursor-pointer">
                       <p className="text-base font-semibold truncate">{file.name}</p>
-                      <p className="text-sm text-[#fceeea]">{file.mimeType || '-'}</p>
-                      <p className="text-sm text-[#fceeea]">{file.size ? (file.size / 1024).toFixed(2) : '-'} KB</p>
+                      <p className="text-sm text-[#fceeea]">{file.mimeType || 'folder'}</p>
+                      <p className="text-sm text-[#fceeea]">{file.size ? (file.size / 1024).toFixed(2) + ' KB': '-'}</p>
                       <p className="text-sm text-[#fceeea]">{new Date(file.createdAt).toLocaleDateString()}</p>
                     </div>
                   ))}

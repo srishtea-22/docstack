@@ -11,50 +11,50 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-router.get('/files', async (req, res) => {
+router.get('/', async (req, res) => {
     if (!req.session || !req.session.user || !req.session.user.id) {
         return res.status(401).json({error : "Unauthorized"});
     }
 
     const userId = req.session.user.id;
+    const parentId = req.query.parentId || null;
 
     try {
         const userEntities = await prisma.entity.findMany({
             where: {
                 userId: userId,
-                type: 'FILE',
+                parentId: parentId === "null" ? null : parentId,
             },
             orderBy: {
                 createdAt: 'desc',
             },
         });
+        const result = userEntities.map((entity) => {
+          if (entity.type === "FILE") {
+            const { data } = supabase.storage
+              .from("docstack-storage")
+              .getPublicUrl(entity.filePath);
 
-        const filesWithURLs = userEntities.map(entity => {
-            if (entity.filePath) {
-                const { data } = supabase.storage
-                .from('docstack-storage')
-                .getPublicUrl(entity.filePath);
-
-                return {
-                    id: entity.id,
-                    name: entity.name,
-                    mimeType: entity.mimeType,
-                    size: entity.size,
-                    createdAt: entity.createdAt,
-                    publicURL: data.publicUrl,
-                };
-            }
             return {
-                id: entity.id,
-                name: entity.name,
-                mimeType: entity.mimeType,
-                size: entity.size,
-                createdAt: entity.createdAt,
-                publicURL: null,
+              id: entity.id,
+              name: entity.name,
+              type: "FILE",
+              mimeType: entity.mimeType,
+              size: entity.size,
+              createdAt: entity.createdAt,
+              publicURL: data.publicUrl,
             };
+          }
+
+          return {
+            id: entity.id,
+            name: entity.name,
+            type: "FOLDER",
+            createdAt: entity.createdAt,
+          };
         });
 
-        return res.json(filesWithURLs);
+        return res.json(result);
     }
     catch (error){
         console.error("error fetching files", error);
