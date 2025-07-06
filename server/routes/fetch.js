@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
     }
 
     const userId = req.session.user.id;
-    const parentId = req.query.parentId || null;
+    const parentId = req.query.parentId ? Number(req.query.parentId) : null;
 
     try {
         const userEntities = await prisma.entity.findMany({
