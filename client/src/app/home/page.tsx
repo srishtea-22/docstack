@@ -2,6 +2,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import NewFileModal from "@/components/NewFileModal";
+import NewFolderModal from "@/components/NewFolderModal";
 
 interface Entity {
   id: number;
@@ -19,9 +20,10 @@ export default function HomePage() {
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [filesError, setFilesError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [folder, setFolder] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [showFolderModal, setShowFolderModal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -72,32 +74,38 @@ export default function HomePage() {
     router.push("/login");
   };
 
-  const handleUpload = async (e: FormEvent) => {
+  const handleFileUpload = async (e: FormEvent) => {
     e.preventDefault();
     if (!file) return;
 
     setUploading(true);
-    setMessage(null);
 
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("http://localhost:8080/upload", {
+    const res = await fetch("http://localhost:8080/upload/file", {
       method: "POST",
       body: formData,
       credentials: "include",
     });
 
     const data = await res.json();
-
-    if (res.ok) {
-      setMessage("file uploaded successfully");
-    }
-    else {
-      setMessage(data.error || "upload failed");
-    }
     setUploading(false);
   };
+
+  const handleFolderUpload = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!folder)  return;
+
+    await fetch("http://localhost:8080/upload/folder", {
+      method: "POST",
+      headers: { 'Content-Type': 'application/json'},
+      credentials: 'include',
+      body: JSON.stringify({folder}),
+    });
+
+    setFolder("");
+  }
 
   if (loading) return <p>Loading...</p>;
 
@@ -108,27 +116,35 @@ export default function HomePage() {
             <span className="text-4xl text-orange-500 font-bold">.</span>
           </h1>
               <button
-                onClick={() => setShowModal(true)}
+                onClick={() => setShowFileModal(true)}
                 className="group w-full p-2 mb-4 bg-black text-white hover:bg-white hover:text-black outline outline-1 outline-white rounded-lg flex items-center justify-center gap-1 transition duration-300 ease-in-out transform cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" className="fill-white group-hover:fill-black transition-colors duration-300">
                   <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
                 </svg>File
               </button>
+              <NewFileModal
+                show={showFileModal} 
+                close={() => setShowFileModal(false)} 
+                handleFileUpload={handleFileUpload} 
+                setFile={setFile} 
+                uploading={uploading}/>
               
               <button
+              onClick={() => setShowFolderModal(true)}
                 className="group w-full p-2 mb-4 bg-black text-white hover:bg-white hover:text-black outline outline-1 outline-white rounded-lg flex items-center justify-center gap-1 transition duration-300 ease-in-out transform cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" className="fill-white group-hover:fill-black transition-colors duration-300">
                   <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
                 </svg>Folder
               </button>
-              <NewFileModal
-                show={showModal} 
-                close={() => setShowModal(false)} 
-                handleUpload={handleUpload} 
-                setFile={setFile} 
-                uploading={uploading}/>
+              <NewFolderModal 
+                show={showFolderModal}
+                close={() => setShowFolderModal(false)}
+                folderName={folder}
+                setFolderName={setFolder}
+                handleFolderUpload={handleFolderUpload}
+              />
           <div>
             {/* breadcrumbs */}
           </div>

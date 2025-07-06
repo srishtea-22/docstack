@@ -37,7 +37,7 @@ app.use(session({
 }));
 
 app.use("/auth", authRoutes);
-app.use("/", uploadRoutes); 
+app.use("/upload", uploadRoutes); 
 app.use("/fetch", fetchRoutes);
 
 app.listen(PORT, () => {

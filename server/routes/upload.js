@@ -12,7 +12,7 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-router.post('/upload', upload.single('file'), async (req, res) => {
+router.post('/file', upload.single('file'), async (req, res) => {
     if (!req.session || !req.session.user.id) {
         return res.status(401).json({error: "Unauthorized"});
     }
@@ -48,5 +48,33 @@ router.post('/upload', upload.single('file'), async (req, res) => {
   }
 
 });
+
+router.post('/folder', async (req, res) => {
+  if (!req.session || !req.session.user.id) {
+    return res.status(401).json("Unauthorized");
+  }
+
+  const userId = req.session.user.id;
+  const { folder, parentId } = req.body;
+  const folderPath = `user-${userId}/${Date.now()}-${folder}`;
+
+  try {
+    const newEntity = await prisma.entity.create({
+      data: {
+        name: folder,
+        type: 'FOLDER',
+        filePath: folderPath,
+        userId: userId,
+        parentId: parentId || null,
+      },
+    });
+
+    return res.json({ message: "File uploaded successfully", folderId: newEntity.id, path: newEntity.filePath });
+  }
+  catch (err){
+    console.error("error creating folder", err);
+    return res.status(500).json("failed to create folder");
+  }
+})
 
 export default router;
