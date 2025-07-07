@@ -27,7 +27,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   const router = useRouter();
 
   useEffect(() => {
-    fetch("http://localhost:8080/auth/user", {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/user`, {
       credentials: "include",
     })
       .then((res) => {
@@ -42,7 +42,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   useEffect(() => {
     if (username) {
       setLoadingEntities(true);
-      fetch(`http://localhost:8080/fetch?parentId=${parentId ?? ""}`, {
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/fetch?parentId=${parentId ?? ""}`, {
         credentials: "include",
       })
       .then((res) => {
@@ -67,7 +67,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   }, [username, loading]);
 
   const handleLogout = async () => {
-    await fetch("http://localhost:8080/auth/logout", {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
@@ -84,7 +84,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
     formData.append("file", file);
     formData.append("parentId", parentId || "");
 
-    const res = await fetch("http://localhost:8080/upload/file", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/upload/file`, {
       method: "POST",
       body: formData,
       credentials: "include",
@@ -98,7 +98,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
     e.preventDefault();
     if (!folder)  return;
 
-    await fetch("http://localhost:8080/upload/folder", {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/upload/folder`, {
       method: "POST",
       headers: { 'Content-Type': 'application/json'},
       credentials: 'include',
