@@ -3,6 +3,7 @@ import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import NewFileModal from "@/components/NewFileModal";
 import NewFolderModal from "@/components/NewFolderModal";
+import FilePreviewModal from "./FilePreviewModal";
 
 interface Entity {
   id: number;
@@ -24,6 +25,8 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   const [uploading, setUploading] = useState(false);
   const [showFileModal, setShowFileModal] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
+  const [showFilePreviewModal, setShowFilePreviewModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<Entity | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -112,6 +115,10 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
     if (!entity.mimeType){
         router.push(`/home/folder/${entity.id}`);
     }
+    else {
+      setSelectedFile(entity);
+      setShowFilePreviewModal(true);
+    }
   }
 
   if (loading) return <p>Loading...</p>;
@@ -181,21 +188,27 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
               <p>No files, start by uploading one!</p>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
-                  <div className="p-4 grid grid-cols-[4fr_1fr_1fr_1fr] gap-2">
+                  <div className="p-4 grid grid-cols-[4fr_1fr_1fr] gap-2">
                     <p className="text-base">Name</p>
-                    <p className="text-sm">Type</p>
                     <p className="text-sm">Size</p>
                     <p className="text-sm">Created</p>
                     </div>
                   {userEntities.map((file) => (
-                    <div key={file.id} className="bg-[#2a2a2a] hover:bg-[#343434] p-4 rounded-lg shadow-md grid grid-cols-[4fr_1fr_1fr_1fr] gap-4 cursor-pointer" 
+                    <div key={file.id} className="bg-[#2a2a2a] hover:bg-[#343434] p-4 rounded-lg shadow-md grid grid-cols-[4fr_1fr_1fr] gap-4 cursor-pointer" 
                     onClick={() => handleEntityClick(file)}>
                       <p className="text-base font-semibold truncate">{file.name}</p>
-                      <p className="text-sm text-[#fceeea]">{file.mimeType || 'folder'}</p>
                       <p className="text-sm text-[#fceeea]">{file.size ? (file.size / 1024).toFixed(2) + ' kB': '-'}</p>
                       <p className="text-sm text-[#fceeea]">{new Date(file.createdAt).toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"})}</p>
                     </div>
                   ))}
+                    <FilePreviewModal 
+                    show={showFilePreviewModal}
+                    close={() => setShowFilePreviewModal(false)}
+                    fileName={selectedFile?.name || ""}
+                    fileType={selectedFile?.mimeType || ""}
+                    fileSize={selectedFile?.size || 0}
+                    createdAt={selectedFile?.createdAt || ""}
+                  />
                 </div>
             )}
             </div>

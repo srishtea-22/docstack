@@ -12,7 +12,7 @@ export default function NewFileModal({ show, close, handleFileUpload, setFile, u
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
       <div className="bg-black w-96 p-4 rounded-lg space-y-4">
         <div className="flex items-center justify-end">
           <button onClick={close} className="text-white text-2xl hover:text-red-400 transition cursor-pointer">×</button>
