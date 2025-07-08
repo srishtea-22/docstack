@@ -1,3 +1,5 @@
+import { motion, AnimatePresence } from 'framer-motion';
+
 type Props = {
     show: boolean;
     close: () => void;
@@ -8,9 +10,15 @@ type Props = {
 }
 
 export default function FilePreviewModal({ show, close, fileName, fileType, fileSize, createdAt }: Props) {
-    if (!show) return null;
     return (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60">
+        <AnimatePresence>
+        {show && (
+            <motion.div 
+                className="fixed inset-0 flex items-center justify-center z-50 bg-black/60"
+                initial={{opacity: 0, scale: 0.95}}
+                animate={{opacity: 1, scale: 1}}
+                exit={{opacity: 0, scale: 0.95}}
+                transition={{duration: 0.2}}>
             <div className="bg-black w-[90%] max-w-md p-6 rounded-2xl space-y-4 text-white">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold truncate">{fileName}</h3>
@@ -42,6 +50,8 @@ export default function FilePreviewModal({ show, close, fileName, fileType, file
                 </div>
               </div>
             </div>
-        </div>
+        </motion.div>
+        )}
+        </AnimatePresence>
     );
 }

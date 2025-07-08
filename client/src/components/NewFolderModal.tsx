@@ -1,3 +1,5 @@
+import { motion, AnimatePresence } from 'framer-motion';
+
 type Props = {
   show: boolean;
   close: () => void;
@@ -7,10 +9,15 @@ type Props = {
 };
 
 export default function NewFolderModal({ show, close, folderName, setFolderName, handleFolderUpload }: Props) {
-  if (!show) return null;
-
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+    <AnimatePresence>
+    {show && (
+      <motion.div 
+        className="fixed inset-0 flex items-center justify-center z-50 bg-black/60"
+        initial={{opacity: 0, scale: 0.95}}
+        animate={{opacity: 1, scale: 1}}
+        exit={{opacity: 0, scale: 0.95}}
+        transition={{duration: 0.2}}>
       <div className="bg-black w-[90%] max-w-md p-6 rounded-2xl space-y-6 shadow-lg">
         <div className="flex items-center justify-between">
           <h3 className="text-white text-lg font-semibold">New Folder</h3>
@@ -37,7 +44,9 @@ export default function NewFolderModal({ show, close, folderName, setFolderName,
           </button>
         </form>
       </div>
-    </div>
+    </motion.div>
+      )}
+    </AnimatePresence>
   );
 
 }
