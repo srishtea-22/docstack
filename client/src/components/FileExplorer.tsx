@@ -11,7 +11,7 @@ interface Entity {
   mimeType: string | null;
   size: number | null;
   createdAt: string;
-  publicURL: string | null;
+  filePath: string | null;
 }
 
 export default function FileExplorer({ parentId }: { parentId: string | null }) {
@@ -208,6 +208,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                     fileType={selectedFile?.mimeType || ""}
                     fileSize={selectedFile?.size || 0}
                     createdAt={selectedFile?.createdAt || ""}
+                    filePath={selectedFile?.filePath || ""}
                   />
                 </div>
             )}

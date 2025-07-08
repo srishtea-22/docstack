@@ -32,8 +32,7 @@ router.get('/', async (req, res) => {
         const result = userEntities.map((entity) => {
           if (entity.type === "FILE") {
             const { data } = supabase.storage
-              .from("docstack-storage")
-              .getPublicUrl(entity.filePath);
+              .from("docstack-storage");
 
             return {
               id: entity.id,
@@ -42,7 +41,7 @@ router.get('/', async (req, res) => {
               mimeType: entity.mimeType,
               size: entity.size,
               createdAt: entity.createdAt,
-              publicURL: data.publicUrl,
+              filePath: entity.filePath,
             };
           }
 
