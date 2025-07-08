@@ -7,16 +7,18 @@ type Props = {
     fileType: string;
     fileSize: number;
     createdAt: string;
+    filePath: string;
 }
 
 type IconWithTooltipProps = {
   label: string;
   children: React.ReactNode;
+  onClick?: () => void;
 };
 
-const IconWithTooltip: React.FC<IconWithTooltipProps> = ({ label, children }) => (
+const IconWithTooltip: React.FC<IconWithTooltipProps> = ({ label, children, onClick }) => (
   <div className="relative group">
-    <button className="p-2 rounded-full hover:bg-white/10 cursor-pointer">
+    <button className="p-2 rounded-full hover:bg-white/10 cursor-pointer" onClick={onClick}>
       {children}
     </button>
     <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
@@ -25,8 +27,15 @@ const IconWithTooltip: React.FC<IconWithTooltipProps> = ({ label, children }) =>
   </div>
 );
 
+const handlePreview = async (filePath: string) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/preview?filePath=${encodeURIComponent(filePath)}`, {
+    credentials: 'include',
+  });
+  const { url } = await res.json();
+  window.open(url, '_blank');
+};
 
-export default function FilePreviewModal({ show, close, fileName, fileType, fileSize, createdAt }: Props) {
+export default function FilePreviewModal({ show, close, fileName, fileType, fileSize, createdAt, filePath }: Props) {
     return (
         <AnimatePresence>
         {show && (
@@ -68,7 +77,7 @@ export default function FilePreviewModal({ show, close, fileName, fileType, file
               </div>
               <div className="flex gap-6 justify-end mt-6">
                 <div className="relative group">
-                  <IconWithTooltip label='Preview'>
+                  <IconWithTooltip label='Preview' onClick={() => handlePreview(filePath)}>
                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF">
                       <path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Z" aria-labelledby="preview" />
                     </svg>
