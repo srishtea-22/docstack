@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { fileURLToPath } from 'url';
 
 type Props = {
     show: boolean;
@@ -28,12 +29,28 @@ const IconWithTooltip: React.FC<IconWithTooltipProps> = ({ label, children, onCl
 );
 
 const handlePreview = async (filePath: string) => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/preview?filePath=${encodeURIComponent(filePath)}`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/action/preview?filePath=${encodeURIComponent(filePath)}`, {
     credentials: 'include',
   });
   const { url } = await res.json();
   window.open(url, '_blank');
 };
+
+const handleDownload = async (filePath: string) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/action/download?filePath=${encodeURIComponent(filePath)}`, {
+    credentials: 'include',
+  });
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filePath.split('/').pop() || 'file';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}
 
 export default function FilePreviewModal({ show, close, fileName, fileType, fileSize, createdAt, filePath }: Props) {
     return (
@@ -86,7 +103,7 @@ export default function FilePreviewModal({ show, close, fileName, fileType, file
                     Preview
                   </span>
                 </div>
-                <IconWithTooltip label='Download'>
+                <IconWithTooltip label='Download' onClick={() => handleDownload(filePath)}>
                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
                 </IconWithTooltip>
                 <IconWithTooltip label='Share'>

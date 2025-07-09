@@ -7,7 +7,7 @@ import { PrismaClient } from "@prisma/client";
 import session from "express-session";
 import uploadRoutes from "./routes/upload.js"
 import fetchRoutes from "./routes/fetch.js"
-import urlRoutes from "./routes/preview.js"
+import fileActionRoutes from "./routes/fileActions.js"
 
 const app = express();
 const prisma = new PrismaClient();
@@ -40,7 +40,7 @@ app.use(session({
 app.use("/auth", authRoutes);
 app.use("/upload", uploadRoutes); 
 app.use("/fetch", fetchRoutes);
-app.use("/", urlRoutes);
+app.use("/action", fileActionRoutes);
 
 app.listen(PORT, () => {
     console.log("server started");
