@@ -57,7 +57,8 @@ router.post('/folder', async (req, res) => {
   }
 
   const userId = req.session.user.id;
-  const { folder, parentId } = req.body;
+  const folder = req.body.folder;
+  const parentId = req.body.parentId ? Number(req.body.parentId) : null;
   const folderPath = `user-${userId}/${Date.now()}-${folder}`;
 
   try {
@@ -67,7 +68,7 @@ router.post('/folder', async (req, res) => {
         type: 'FOLDER',
         filePath: folderPath,
         userId: userId,
-        parentId: parentId || null,
+        parentId: parentId,
       },
     });
 
