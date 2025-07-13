@@ -61,4 +61,16 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.get('/entity/:id', async (req, res) => {
+  const { id } = req.params;
+
+  const entity = await prisma.entity.findUnique({
+    where: {id: parseInt(id)},
+    select: {id: true, name: true, parentId: true},
+  });
+
+  if (!entity) return res.status(404).json({error: "Not found"});
+  res.json(entity);
+})
+
 export default router;

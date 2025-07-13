@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import NewFileModal from "@/components/NewFileModal";
 import NewFolderModal from "@/components/NewFolderModal";
 import FilePreviewModal from "./FilePreviewModal";
@@ -27,7 +27,10 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [showFilePreviewModal, setShowFilePreviewModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<Entity | null>(null);
+  const [breadcrumbs, setBreadcrumbs] = useState<Entity[]>([]);
   const router = useRouter();
+  const params = useParams();
+  const folderId = params?.id ?? null;
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/user`, {
@@ -68,6 +71,29 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
       setLoadingEntities(false);
     }
   }, [username, loading]);
+
+  useEffect(() => {
+    if (!folderId) {
+      setBreadcrumbs([]);
+      return;
+    }
+    
+    async function fetchBreadcrumbs(id: string) {
+      const path = [];
+      while (id) {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/fetch/entity/${id}`, {
+          credentials: 'include',
+        });
+
+        const data = await res.json();
+        path.unshift(data);
+        id = data.parentId;
+      }
+      setBreadcrumbs(path);
+    } 
+
+    fetchBreadcrumbs(folderId as string);
+  }, [folderId]);
 
   const handleLogout = async () => {
     await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
@@ -135,7 +161,8 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
               >
                 <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" className="fill-white group-hover:fill-black transition-colors duration-300">
                   <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
-                </svg>File
+                </svg>
+                <span className="text-sm">File</span>
               </button>
               <NewFileModal
                 show={showFileModal} 
@@ -150,7 +177,8 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
               >
                 <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" className="fill-white group-hover:fill-black transition-colors duration-300">
                   <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
-                </svg>Folder
+                </svg>
+                <span className="text-sm">Folder</span>
               </button>
               <NewFolderModal 
                 show={showFolderModal}
@@ -168,9 +196,22 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
       {username ? (
         <>
         <header className="flex justify-between items-center">
-          <h2 className="ml-4 mt-2">
-            Welcome, {username}!
-          </h2>
+        {!folderId ? (
+          <h2 className="ml-4 mt-2 text-l">Welcome, {username}.</h2>
+        ) : (
+          <nav className="ml-4 mt-2 text-l">
+            <a href="/home">Home</a>
+            {" > "}
+            {breadcrumbs.map((folder, i) => (
+              <span key={folder.id}>
+                <a href={`/home/folder/${folder.id}`}>
+                  {folder.name}
+                </a>
+                {i < breadcrumbs.length - 1 && " > "}
+              </span>
+            ))}
+          </nav>
+        )}
           <button
             className="text-red-500 cursor-pointer mt-2 flex gap-1"
             onClick={handleLogout}
