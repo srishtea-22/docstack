@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { motion, AnimatePresence } from 'framer-motion';
 import NewFileModal from "@/components/NewFileModal";
 import NewFolderModal from "@/components/NewFolderModal";
 import FilePreviewModal from "./FilePreviewModal";
@@ -15,12 +14,16 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   const [userEntities, setUserEntities] = useState<Entity[]>([]);
   const [loadingEntites, setLoadingEntities] = useState(true);
   const [entitesError, setEntitiesError] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [folder, setFolder] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [showFileModal, setShowFileModal] = useState(false);
-  const [showFolderModal, setShowFolderModal] = useState(false);
-  const [showFilePreviewModal, setShowFilePreviewModal] = useState(false);
+  const [uploadState, setUploadState] = useState({
+    file: null as File | null,
+    folder: "",
+    uploading: false,
+  });
+  const [modals, setModals] = useState({
+    file: false,
+    folder: false,
+    preview: false,
+  });
   const [selectedFile, setSelectedFile] = useState<Entity | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<Entity[]>([]);
   const [folderTree, setFolderTree] = useState<Folder[]>([]);
@@ -110,12 +113,12 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
 
   const handleFileUpload = async (e: FormEvent) => {
     e.preventDefault();
-    if (!file) return;
+    if (!uploadState.file) return;
 
-    setUploading(true);
+    setUploadState(prev => ({...prev, uploading: true}));
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", uploadState.file);
     formData.append("parentId", parentId || "");
 
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/upload/file`, {
@@ -125,21 +128,21 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
     });
 
     const data = await res.json();
-    setUploading(false);
+    setUploadState(prev => ({...prev, uploading: false}));
   };
 
   const handleFolderUpload = async (e: FormEvent) => {
     e.preventDefault();
-    if (!folder)  return;
+    if (!uploadState.folder)  return;
 
     await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/upload/folder`, {
       method: "POST",
       headers: { 'Content-Type': 'application/json'},
       credentials: 'include',
-      body: JSON.stringify({folder, parentId: parentId || null,}),
+      body: JSON.stringify({folder: uploadState.folder, parentId: parentId || null,}),
     });
 
-    setFolder("");
+    setUploadState(prev => ({...prev, folder: ""}));
   }
 
   const handleEntityClick = (entity: Entity) => {
@@ -148,7 +151,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
     }
     else {
       setSelectedFile(entity);
-      setShowFilePreviewModal(true);
+      setModals(prev => ({...prev, preview: true}));
     }
   }
 
@@ -161,7 +164,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
             <span className="text-4xl text-orange-500 font-bold">.</span>
           </h1>
               <button
-                onClick={() => setShowFileModal(true)}
+                onClick={() => setModals(prev => ({...prev, file: true}))}
                 className="group w-full py-1 mb-4 bg-black text-white hover:bg-white hover:text-black outline outline-1 outline-white rounded-lg flex items-center justify-center gap-1 transition duration-300 ease-in-out transform cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" className="fill-white group-hover:fill-black transition-colors duration-300">
@@ -170,14 +173,14 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                 <span className="text-sm">File</span>
               </button>
               <NewFileModal
-                show={showFileModal} 
-                close={() => setShowFileModal(false)} 
+                show={modals.file} 
+                close={() => setModals(prev => ({...prev, file: false}))} 
                 handleFileUpload={handleFileUpload} 
-                setFile={setFile} 
-                uploading={uploading}/>
+                setFile={(file) => setUploadState(prev => ({...prev, file}))} 
+                uploading={uploadState.uploading}/>
               
               <button
-              onClick={() => setShowFolderModal(true)}
+              onClick={() => setModals(prev => ({...prev, folder: true}))}
                 className="group w-full py-1 mb-4 bg-black text-white hover:bg-white hover:text-black outline outline-1 outline-white rounded-lg flex items-center justify-center gap-1 transition duration-300 ease-in-out transform cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" className="fill-white group-hover:fill-black transition-colors duration-300">
@@ -186,10 +189,10 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                 <span className="text-sm">Folder</span>
               </button>
               <NewFolderModal 
-                show={showFolderModal}
-                close={() => setShowFolderModal(false)}
-                folderName={folder}
-                setFolderName={setFolder}
+                show={modals.folder}
+                close={() => setModals(prev => ({...prev, folder: false}))}
+                folderName={uploadState.folder}
+                setFolderName={(name) => setUploadState(prev => ({...prev, folder: name}))}
                 handleFolderUpload={handleFolderUpload}
               />
             <div className="p-2">
@@ -254,8 +257,8 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                     </div>
                   ))}
                     <FilePreviewModal 
-                    show={showFilePreviewModal}
-                    close={() => setShowFilePreviewModal(false)}
+                    show={modals.preview}
+                    close={() => setModals(prev => ({...prev, preview: false}))}
                     fileName={selectedFile?.name || ""}
                     fileType={selectedFile?.mimeType || ""}
                     fileSize={selectedFile?.size || 0}
