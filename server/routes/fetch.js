@@ -1,8 +1,6 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { createClient } from "@supabase/supabase-js";
-import e from "express";
-import { join } from "@prisma/client/runtime/library";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -11,12 +9,18 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-router.get('/', async (req, res) => {
-    if (!req.session || !req.session.user || !req.session.user.id) {
-        return res.status(401).json({error : "Unauthorized"});
-    }
+const authorizeUser = async (req, res) => {
+  if (!req.session || !req.session.user || !req.session.user.id) {
+    return null;
+  }
+  return {user: req.session.user};
+}
 
-    const userId = req.session.user.id;
+router.get('/', async (req, res) => {
+    const result = await authorizeUser(req, res);
+    if (!result) return res.status(401).json({error : "Unauthorized"});
+
+    const userId = result.user.id;
     const parentId = req.query.parentId ? Number(req.query.parentId) : null;
 
     try {
@@ -62,6 +66,9 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/entity/:id', async (req, res) => {
+  const result = await authorizeUser(req, res);
+  if (!result) return res.status(401).json({error : "Unauthorized"});
+
   const { id } = req.params;
 
   const entity = await prisma.entity.findUnique({
@@ -71,6 +78,37 @@ router.get('/entity/:id', async (req, res) => {
 
   if (!entity) return res.status(404).json({error: "Not found"});
   res.json(entity);
+})
+
+router.get('/folderTree', async (req, res) => {
+  const result = await authorizeUser(req, res);
+  if (!result) return res.status(401).json({error : "Unauthorized"});
+
+  const userId = result.user.id;
+
+  const folders = await prisma.entity.findMany({
+    where: {
+      userId: userId,
+       type: 'FOLDER',
+      },
+    select: {
+      id: true,
+      name: true,
+      parentId: true,
+    }
+  });
+
+  function buildTree(folders, parentId = null) {
+    return folders
+    .filter(folder => folder.parentId === parentId)
+    .map(folder => ({
+      ...folder,
+      children: buildTree(folders, folder.id),
+    }));
+  };
+
+  const folderTree = buildTree(folders);
+  res.json(folderTree);
 })
 
 export default router;

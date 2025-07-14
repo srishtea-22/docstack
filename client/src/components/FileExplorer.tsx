@@ -1,18 +1,13 @@
 'use client';
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { motion, AnimatePresence } from 'framer-motion';
 import NewFileModal from "@/components/NewFileModal";
 import NewFolderModal from "@/components/NewFolderModal";
 import FilePreviewModal from "./FilePreviewModal";
-
-interface Entity {
-  id: number;
-  name: string;
-  mimeType: string | null;
-  size: number | null;
-  createdAt: string;
-  filePath: string | null;
-}
+import FolderNode from "./FolderNode";
+import { Folder } from '@/lib/types';
+import { Entity } from '@/lib/types';
 
 export default function FileExplorer({ parentId }: { parentId: string | null }) {
   const [username, setUsername] = useState<string | null>(null);
@@ -28,6 +23,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   const [showFilePreviewModal, setShowFilePreviewModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<Entity | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<Entity[]>([]);
+  const [folderTree, setFolderTree] = useState<Folder[]>([]);
   const router = useRouter();
   const params = useParams();
   const folderId = params?.id ?? null;
@@ -94,6 +90,15 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
 
     fetchBreadcrumbs(folderId as string);
   }, [folderId]);
+
+  useEffect(() => {
+    const fetchFolderTree = async () => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/fetch/folderTree`, {credentials: 'include'});
+      const data = await res.json();
+      setFolderTree(data);
+    }
+    fetchFolderTree();
+  }, []);
 
   const handleLogout = async () => {
     await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
@@ -187,9 +192,15 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                 setFolderName={setFolder}
                 handleFolderUpload={handleFolderUpload}
               />
-          <div>
-            {/* breadcrumbs */}
-          </div>
+            <div className="p-2">
+              <div className="font-bold mb-2 hover:text-orange-500">
+                <a href="/home">Home</a>
+              </div>
+
+              {folderTree.map(folder => (
+                <FolderNode key={folder.id} folder={folder} />
+              ))}
+            </div>
       </aside>
 
     <main className="flex-1 flex flex-col p-4 overflow-auto">
@@ -200,11 +211,11 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
           <h2 className="ml-4 mt-2 text-l">Welcome, {username}.</h2>
         ) : (
           <nav className="ml-4 mt-2 text-l">
-            <a href="/home">Home</a>
+            <a href="/home" className="hover:text-orange-500">Home</a>
             {" > "}
             {breadcrumbs.map((folder, i) => (
               <span key={folder.id}>
-                <a href={`/home/folder/${folder.id}`}>
+                <a href={`/home/folder/${folder.id}`} className="hover:text-orange-500">
                   {folder.name}
                 </a>
                 {i < breadcrumbs.length - 1 && " > "}
