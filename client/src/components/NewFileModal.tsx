@@ -1,4 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { FileUpload } from "./file-upload";
+import { useEffect } from 'react';
 
 type Props = {
   show: boolean;
@@ -8,9 +10,11 @@ type Props = {
   uploading: boolean;
 };
 
-import { FileUpload } from "./file-upload";
-
 export default function NewFileModal({ show, close, handleFileUpload, setFile, uploading }: Props) {
+  useEffect(() => {
+    if (!uploading) close();
+  }, [uploading]);
+
   return (
     <AnimatePresence>
       {show && (

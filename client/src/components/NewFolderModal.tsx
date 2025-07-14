@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect } from 'react';
 
 type Props = {
   show: boolean;
@@ -6,9 +7,13 @@ type Props = {
   folderName: string;
   setFolderName: (val: string) => void;
   handleFolderUpload: (e: React.FormEvent) => void;
+  creating: boolean;
 };
 
-export default function NewFolderModal({ show, close, folderName, setFolderName, handleFolderUpload }: Props) {
+export default function NewFolderModal({ show, close, folderName, setFolderName, handleFolderUpload, creating }: Props) {
+  useEffect(() => {
+    if (!creating) close();
+  }, [creating]);
   return (
     <AnimatePresence>
     {show && (
@@ -40,7 +45,7 @@ export default function NewFolderModal({ show, close, folderName, setFolderName,
             type="submit"
             className="bg-[#008abc] text-white px-4 py-2 rounded-lg hover:bg-[#045c7c] transition cursor-pointer"
           >
-            Create
+            {creating ? "Creating" : "Create"}
           </button>
         </form>
       </div>

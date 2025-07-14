@@ -42,7 +42,7 @@ router.post('/file', upload.single('file'), async (req, res) => {
         parentId: parentId,
       },
     });
-    return res.json({ message: "File uploaded successfully", path: uploadData.path, entityId: newEntity.id });
+    return res.json({ message: "File uploaded successfully", entity: newEntity });
   }
   catch (dbError){
     console.error("database error: ", dbError);
@@ -72,7 +72,7 @@ router.post('/folder', async (req, res) => {
       },
     });
 
-    return res.json({ message: "File uploaded successfully", folderId: newEntity.id, path: newEntity.filePath });
+    return res.json({ message: "File uploaded successfully", entity: newEntity });
   }
   catch (err){
     console.error("error creating folder", err);

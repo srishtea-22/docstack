@@ -17,7 +17,8 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   const [uploadState, setUploadState] = useState({
     file: null as File | null,
     folder: "",
-    uploading: false,
+    fileUploading: false,
+    folderUploading: false,
   });
   const [modals, setModals] = useState({
     file: false,
@@ -115,7 +116,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
     e.preventDefault();
     if (!uploadState.file) return;
 
-    setUploadState(prev => ({...prev, uploading: true}));
+    setUploadState(prev => ({...prev, fileUploading: true}));
 
     const formData = new FormData();
     formData.append("file", uploadState.file);
@@ -128,14 +129,18 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
     });
 
     const data = await res.json();
-    setUploadState(prev => ({...prev, uploading: false}));
+    const newFile = data.entity;
+    setUserEntities(prev => [newFile, ...prev]);
+    setUploadState(prev => ({...prev, fileUploading: false}));
   };
 
   const handleFolderUpload = async (e: FormEvent) => {
     e.preventDefault();
     if (!uploadState.folder)  return;
 
-    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/upload/folder`, {
+    setUploadState(prev => ({...prev, folderUploading: true}));
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/upload/folder`, {
       method: "POST",
       headers: { 'Content-Type': 'application/json'},
       credentials: 'include',
@@ -143,6 +148,10 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
     });
 
     setUploadState(prev => ({...prev, folder: ""}));
+    const data = await res.json();
+    const newFile = data.entity;
+    setUserEntities(prev => [newFile, ...prev]);
+    setUploadState(prev => ({...prev, folderUploading: false}));
   }
 
   const handleEntityClick = (entity: Entity) => {
@@ -155,7 +164,11 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
     }
   }
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen w-screen">
+      <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
+    </div>
+  );
 
   return (
     <div className="flex h-screen font-[family-name:var(--font-geist-mono)]">
@@ -177,7 +190,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                 close={() => setModals(prev => ({...prev, file: false}))} 
                 handleFileUpload={handleFileUpload} 
                 setFile={(file) => setUploadState(prev => ({...prev, file}))} 
-                uploading={uploadState.uploading}/>
+                uploading={uploadState.fileUploading}/>
               
               <button
               onClick={() => setModals(prev => ({...prev, folder: true}))}
@@ -194,8 +207,9 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                 folderName={uploadState.folder}
                 setFolderName={(name) => setUploadState(prev => ({...prev, folder: name}))}
                 handleFolderUpload={handleFolderUpload}
+                creating={uploadState.folderUploading}
               />
-            <div className="p-2">
+            <div>
               <div className="font-bold mb-2 hover:text-orange-500">
                 <a href="/home">Home</a>
               </div>
@@ -236,11 +250,13 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
         </header>
             <div className="flex-1 overflow-auto text-lg bg-[#1b1b1b] mt-8 mr-4 rounded-2xl p-4">
             {loadingEntites ? (
-              <p>Loading files</p>
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
+              </div>
             ) : entitesError ? (
               <p>{entitesError}</p>
             ) : userEntities.length === 0 ? (
-              <p>No files, start by uploading one!</p>
+              <p>No files, start by fileUploading one!</p>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
                   <div className="p-4 grid grid-cols-[4fr_1fr_1fr] gap-2">
