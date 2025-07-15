@@ -1,5 +1,4 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { fileURLToPath } from 'url';
 
 type Props = {
     show: boolean;

@@ -164,6 +164,13 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
     }
   }
 
+  const handleFolderDelete = async (folderId: number) => {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/action/delete/folder?id=${folderId}`, {
+      credentials: 'include',
+    });
+    setUserEntities(prev => prev.filter(entity => entity.id !== folderId));
+  }
+
   if (loading) return (
     <div className="flex items-center justify-center h-screen w-screen">
       <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
@@ -210,8 +217,8 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                 creating={uploadState.folderUploading}
               />
             <div>
-              <div className="font-bold mb-2 hover:text-orange-500">
-                <a href="/home">Home</a>
+              <div className="font-bold mb-2 mt-2 hover:text-orange-500">
+                <a href="/home" className="pl-2">Home</a>
               </div>
 
               {folderTree.map(folder => (
@@ -259,18 +266,49 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
               <p>No files, start by fileUploading one!</p>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
-                  <div className="p-4 grid grid-cols-[4fr_1fr_1fr] gap-2">
+                  <div className="p-4 grid grid-cols-[4fr_1fr_1fr_auto] gap-2">
                     <p className="text-base">Name</p>
                     <p className="text-sm">Size</p>
                     <p className="text-sm">Created</p>
+                    <span className="block w-[24px]" />
                     </div>
-                  {userEntities.map((file) => (
-                    <div key={file.id} className="bg-[#2a2a2a] hover:bg-[#343434] p-4 rounded-lg shadow-md grid grid-cols-[4fr_1fr_1fr] gap-4 cursor-pointer" 
-                    onClick={() => handleEntityClick(file)}>
-                      <p className="text-base font-semibold truncate">{file.name}</p>
-                      <p className="text-sm text-[#fceeea]">{file.size ? (file.size / 1024).toFixed(2) + ' kB': '-'}</p>
-                      <p className="text-sm text-[#fceeea]">{new Date(file.createdAt).toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"})}</p>
+                  {userEntities.map((entity) => (
+                  <div
+                    key={entity.id}
+                    className="bg-[#2a2a2a] hover:bg-[#343434] p-4 rounded-lg shadow-md grid grid-cols-[4fr_1fr_1fr_auto] gap-4 cursor-pointer group"
+                    onClick={() => handleEntityClick(entity)}>
+                    <p className="text-base truncate">{entity.name}</p>
+                    <p className="text-sm text-[#fceeea]">
+                      {entity.size ? (entity.size / 1024).toFixed(2) + " kB" : "-"}
+                    </p>
+                    <p className="text-sm text-[#fceeea]">
+                      {new Date(entity.createdAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
+                    <div className="flex">
+                      {!entity.mimeType ? (
+                        <button className="cursor-pointer peer" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                              handleFolderDelete(entity.id);
+                          }}>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            height="20px"
+                            viewBox="0 -960 960 960"
+                            width="20px"
+                            className="fill-white opacity-0 group-hover:opacity-100 hover:fill-orange-500 transition-all">
+                            <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm80-160h80v-360h-80v360Zm160 0h80v-360h-80v360Z" />
+                          </svg>
+                        </button>
+                      ) : (
+                        <span className="block w-[24px]" />
+                      )}
                     </div>
+                  </div>
                   ))}
                     <FilePreviewModal 
                     show={modals.preview}

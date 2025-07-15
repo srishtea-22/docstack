@@ -88,4 +88,45 @@ router.get('/delete', async (req, res) => {
     return res.status(200).json({message: "Successfully deleted"});
 })
 
+router.get('/delete/folder', async (req, res) => {
+  const id = parseInt(req.query.id);
+  if (isNaN(id)) return res.status(400).json({ error: "Invalid ID" });
+
+  if (!req.session || !req.session.user?.id) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const userId = req.session.user.id;
+
+  const entity = await prisma.entity.findFirst({
+    where: { id, userId },
+  });
+
+  if (!entity) {
+    return res.status(403).json({ error: "Access Denied" });
+  }
+
+  const deleteEntityAndChildren = async (id) => {
+    const children = await prisma.entity.findMany({
+      where: { parentId: id },
+    });
+
+    for (const child of children) {
+      await deleteEntityAndChildren(child.id);
+    }
+
+    const entity = await prisma.entity.findUnique({ where: { id } });
+
+    if (entity?.mimeType && entity.filePath) {
+      await supabase.storage.from('docstack-storage').remove([entity.filePath]);
+    }
+
+    await prisma.entity.delete({ where: { id } });
+  };
+
+  await deleteEntityAndChildren(entity.id);
+
+  return res.status(200).json({ message: "Successfully deleted" });
+});
+
 export default router;
