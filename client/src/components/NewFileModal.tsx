@@ -37,7 +37,7 @@ export default function NewFileModal({ show, close, handleFileUpload, setFile, u
             disabled={uploading}
             className="bg-[#008abc] text-white px-4 py-2 rounded-lg hover:bg-[#045c7c] cursor-pointer"
           >
-            {uploading ? "Uploading..." : "Upload"}
+            {uploading ? <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "Upload"}
           </button>
         </form>
       </div>

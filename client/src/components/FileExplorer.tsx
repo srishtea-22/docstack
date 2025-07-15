@@ -28,6 +28,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   const [selectedFile, setSelectedFile] = useState<Entity | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<Entity[]>([]);
   const [folderTree, setFolderTree] = useState<Folder[]>([]);
+  const [isDeletingFolder, setIsDeletingFolder] = useState(false);
   const router = useRouter();
   const params = useParams();
   const folderId = params?.id ?? null;
@@ -293,16 +294,21 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                         <button className="cursor-pointer peer" 
                           onClick={(e) => {
                             e.stopPropagation();
-                              handleFolderDelete(entity.id);
+                            setIsDeletingFolder(true);
+                              handleFolderDelete(entity.id).finally(() => setIsDeletingFolder(false));
                           }}>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            height="20px"
-                            viewBox="0 -960 960 960"
-                            width="20px"
-                            className="fill-white opacity-0 group-hover:opacity-100 hover:fill-orange-500 transition-all">
-                            <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm80-160h80v-360h-80v360Zm160 0h80v-360h-80v360Z" />
-                          </svg>
+                            {isDeletingFolder ? (
+                              <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                height="20px"
+                                viewBox="0 -960 960 960"
+                                width="20px"
+                                className="fill-white opacity-0 group-hover:opacity-100 hover:fill-orange-500 transition-all">
+                                <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm80-160h80v-360h-80v360Zm160 0h80v-360h-80v360Z" />
+                              </svg>
+                            )}
                         </button>
                       ) : (
                         <span className="block w-[24px]" />
@@ -318,6 +324,9 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                     fileSize={selectedFile?.size || 0}
                     createdAt={selectedFile?.createdAt || ""}
                     filePath={selectedFile?.filePath || ""}
+                    onDelete={(deletedPath) => {
+                      setUserEntities(prev => prev.filter(file => file.filePath !== deletedPath));
+                    }}
                   />
                 </div>
             )}
