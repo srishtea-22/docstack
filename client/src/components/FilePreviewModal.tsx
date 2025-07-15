@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { tree } from 'next/dist/build/templates/app-page';
 import { useState } from 'react';
 
 type Props = {
@@ -31,6 +32,10 @@ const IconWithTooltip: React.FC<IconWithTooltipProps> = ({ label, children, onCl
 
 export default function FilePreviewModal({ show, close, fileName, fileType, fileSize, createdAt, filePath, onDelete }: Props) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [expiry, setExpiry] = useState("1h");
 
   const handlePreview = async (filePath: string) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/action/preview?filePath=${encodeURIComponent(filePath)}`, {
@@ -67,6 +72,14 @@ export default function FilePreviewModal({ show, close, fileName, fileType, file
       close();
     }
     setIsDeleting(false);
+  }
+
+  const generateLink = async (expiry: string, filePath: string) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/action/share?filePath=${encodeURIComponent(filePath)}&expiry=${expiry}`, {
+      credentials: 'include',
+    });
+    const link = await res.text();
+    setGeneratedLink(link);
   }
   return (
       <AnimatePresence>
@@ -106,7 +119,8 @@ export default function FilePreviewModal({ show, close, fileName, fileType, file
                 </span>
               </div>
             </div>
-            <div className="flex gap-6 justify-end mt-6">
+            <div className="mt-6 space-y-4">
+            <div className="flex gap-6 justify-end">
               <div className="relative group">
                 <IconWithTooltip label='Preview' onClick={() => handlePreview(filePath)}>
                   <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF">
@@ -120,7 +134,7 @@ export default function FilePreviewModal({ show, close, fileName, fileType, file
               <IconWithTooltip label='Download' onClick={() => handleDownload(filePath)}>
                   <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
               </IconWithTooltip>
-              <IconWithTooltip label='Share'>
+              <IconWithTooltip label='Share' onClick={() => setShowShareOptions(prev => !prev)}>
                   <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M680-80q-50 0-85-35t-35-85q0-6 3-28L282-392q-16 15-37 23.5t-45 8.5q-50 0-85-35t-35-85q0-50 35-85t85-35q24 0 45 8.5t37 23.5l281-164q-2-7-2.5-13.5T560-760q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-24 0-45-8.5T598-672L317-508q2 7 2.5 13.5t.5 14.5q0 8-.5 14.5T317-452l281 164q16-15 37-23.5t45-8.5q50 0 85 35t35 85q0 50-35 85t-85 35Z"/></svg>
               </IconWithTooltip>
               <IconWithTooltip label="Delete" onClick={() => !isDeleting && handleDelete(filePath)}>
@@ -132,6 +146,58 @@ export default function FilePreviewModal({ show, close, fileName, fileType, file
                   </svg>
                 )}
               </IconWithTooltip>
+            </div>
+            <AnimatePresence>
+              {showShareOptions && (
+                <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-sm overflow-hidden flex flex-col space-y-3">
+                  <div className='text-sm mt-4'>
+                    Link will expire after specified duration:
+                  </div>
+                  <div className="flex items-center justify-between">
+                    {["1h", "6h", "1d", "7d"].map((val) => (
+                      <button
+                        key={val}
+                        onClick={() => setExpiry(val)}
+                        className={`px-3 py-1 rounded bg-gray-800 text-white transition cursor-pointer ${
+                          expiry === val ? "bg-orange-700" : ""
+                        }`}>
+                        {val === "1h" ? "1 hour" : val === "6h" ? "6 hours" : val === "1d" ? "1 day" : "7 days"}
+                      </button>
+                      ))}
+                  </div>
+                  <button 
+                    onClick={() => generateLink(expiry, filePath)}
+                    className='px-4 py-1 bg-[#008abc] rounded hover:bg-[#045c7c] transition cursor-pointer'>
+                    Generate Link
+                  </button>
+                  {generatedLink && (
+                    <div className='flex gap-2'>
+                    <div className="flex-1 text-xs bg-gray-900 p-2 rounded overflow-x-auto whitespace-nowrap scrollbar-hide">
+                      {generatedLink}
+                    </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(generatedLink);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                          }}
+                          className='text-white hover:text-green-400 transition'>
+                        {copied ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 18H8V7h11v16z"/></svg>
+                        )}
+                      </button>
+                      </div>
+                  )}
+                </motion.div>
+              )}
+              </AnimatePresence>
             </div>
           </div>
       </motion.div>

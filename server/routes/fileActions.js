@@ -129,4 +129,39 @@ router.get('/delete/folder', async (req, res) => {
   return res.status(200).json({ message: "Successfully deleted" });
 });
 
+router.get('/share', async (req, res) => {
+    if (!req.session || !req.session.user || !req.session.user.id) {
+        return res.status(401).json({error: "Unauthorized"});
+    }
+    const userId = req.session.user.id;
+    const filePath = req.query.filePath;
+    const expiryRaw = req.query.expiry;
+    const expiryMap = {
+      '1h': 3600,
+      '6h': 21600,
+      '1d': 86400,
+      '7d': 604800,
+    };
+    const expiry = expiryMap[expiryRaw] || 3600;
+
+    const entity = await prisma.entity.findFirst({
+        where: {filePath, userId},
+    });
+
+    if (!entity) {
+        res.status(403).json({error: "Access Denied"});
+        return null;
+    }
+
+    const { data, error} = await supabase.storage
+    .from('docstack-storage')
+    .createSignedUrl(filePath, expiry);
+
+    if (error || !data.signedUrl) {
+        return res.status(500).json({error: error.message || "Failed to sign url"})
+    }
+
+    return res.send(data.signedUrl);
+})
+
 export default router;
