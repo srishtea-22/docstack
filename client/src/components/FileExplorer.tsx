@@ -7,6 +7,7 @@ import FilePreviewModal from "./FilePreviewModal";
 import FolderNode from "./FolderNode";
 import { Folder } from '@/lib/types';
 import { Entity } from '@/lib/types';
+import Image from "next/image";
 
 export default function FileExplorer({ parentId }: { parentId: string | null }) {
   const [username, setUsername] = useState<string | null>(null);
@@ -178,6 +179,12 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
     </div>
   );
 
+  if (!username) return (
+    <div className="flex items-center justify-center h-screen w-screen">
+      <h1 className="text-red-500 font-[family-name:var(--font-geist-mono)]">You are not logged in!</h1>
+    </div>
+  )
+
   return (
     <div className="flex h-screen font-[family-name:var(--font-geist-mono)]">
       <aside className="w-52 p-4 flex flex-col">
@@ -229,8 +236,6 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
       </aside>
 
     <main className="flex-1 flex flex-col p-4 overflow-auto">
-      {username ? (
-        <>
         <header className="flex justify-between items-center">
         {!folderId ? (
           <h2 className="ml-4 mt-2 text-l">Welcome, {username}.</h2>
@@ -264,7 +269,17 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
             ) : entitesError ? (
               <p>{entitesError}</p>
             ) : userEntities.length === 0 ? (
-              <p>No files, start by fileUploading one!</p>
+              <div className="flex items-center justify-center flex-col mt-40">
+                <Image
+                  src="/empty.png"
+                  alt="Empty folder illustration"
+                  className="object-contain" 
+                  priority 
+                  height="100"
+                  width="100"
+                />
+                <p>No files are folders to display</p>
+              </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
                   <div className="p-4 grid grid-cols-[4fr_1fr_1fr_auto] gap-2">
@@ -331,10 +346,6 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                 </div>
             )}
             </div>
-        </>
-      ) : (
-        <h1 className="text-xl text-red-500">You are not logged in</h1>
-      )}
     </main>
     </div>
   );
