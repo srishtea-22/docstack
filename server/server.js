@@ -29,7 +29,7 @@ app.use(session({
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         maxAge: 1000 * 60 * 60 * 24,
-        sameSite: "lax",
+        sameSite: "none",
     },
     store: new PrismaSessionStore(prisma, {
         checkPeriod: 2 * 60 * 1000,
