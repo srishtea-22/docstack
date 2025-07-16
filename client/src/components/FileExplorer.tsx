@@ -198,7 +198,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   )
 
   return (
-    <div className="flex h-screen font-[family-name:var(--font-geist-mono)]">
+    <div className="flex h-screen font-[family-name:var(--font-geist-mono)] bg-black text-white">
       <aside className="w-52 p-4 flex flex-col">
           <h1 className="text-3xl text-white flex items-baseline mb-6 ml-2">docstack
             <span className="text-4xl text-orange-500 font-bold">.</span>
