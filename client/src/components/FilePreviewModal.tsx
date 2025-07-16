@@ -34,6 +34,7 @@ export default function FilePreviewModal({ show, close, fileName, fileType, file
   const [isDeleting, setIsDeleting] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [generatedLink, setGeneratedLink] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [expiry, setExpiry] = useState("1h");
 
@@ -75,17 +76,19 @@ export default function FilePreviewModal({ show, close, fileName, fileType, file
   }
 
   const generateLink = async (expiry: string, filePath: string) => {
+    setIsGenerating(true);
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/action/share?filePath=${encodeURIComponent(filePath)}&expiry=${expiry}`, {
       credentials: 'include',
     });
     const link = await res.text();
     setGeneratedLink(link);
+    setIsGenerating(false);
   }
   return (
       <AnimatePresence>
       {show && (
           <motion.div 
-              className="fixed inset-0 flex items-center justify-center z-50 bg-black/60"
+              className="fixed inset-0 flex items-center justify-center z-50 bg-black/50"
               initial={{opacity: 0, scale: 0.95}}
               animate={{opacity: 1, scale: 1}}
               exit={{opacity: 0, scale: 0.95}}
@@ -172,8 +175,8 @@ export default function FilePreviewModal({ show, close, fileName, fileType, file
                   </div>
                   <button 
                     onClick={() => generateLink(expiry, filePath)}
-                    className='px-4 py-1 bg-[#008abc] rounded hover:bg-[#045c7c] transition cursor-pointer'>
-                    Generate Link
+                    className='flex items-center justify-center px-4 py-1 bg-[#008abc] rounded hover:bg-[#045c7c] transition cursor-pointer'>
+                      {isGenerating ? <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "Generate Link"}
                   </button>
                   {generatedLink && (
                     <div className='flex gap-2'>

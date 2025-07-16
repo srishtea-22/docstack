@@ -18,7 +18,7 @@ export default function NewFolderModal({ show, close, folderName, setFolderName,
     <AnimatePresence>
     {show && (
       <motion.div 
-        className="fixed inset-0 flex items-center justify-center z-50 bg-black/60"
+        className="fixed inset-0 flex items-center justify-center z-50 bg-black/50"
         initial={{opacity: 0, scale: 0.95}}
         animate={{opacity: 1, scale: 1}}
         exit={{opacity: 0, scale: 0.95}}
@@ -43,7 +43,7 @@ export default function NewFolderModal({ show, close, folderName, setFolderName,
           />
           <button
             type="submit"
-            className="bg-[#008abc] text-white px-4 py-2 rounded-lg hover:bg-[#045c7c] transition cursor-pointer"
+            className="flex items-center justify-center bg-[#008abc] text-white px-4 py-2 rounded-lg hover:bg-[#045c7c] transition cursor-pointer"
           >
             {creating ? <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "Create"}
           </button>

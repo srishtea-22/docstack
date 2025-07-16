@@ -21,9 +21,23 @@ router.get('/', async (req, res) => {
     if (!result) return res.status(401).json({error : "Unauthorized"});
 
     const userId = result.user.id;
-    const parentId = req.query.parentId ? Number(req.query.parentId) : null;
+    const parentIdParam = req.query.parentId;
+    const parentId = parentIdParam === "null" || parentIdParam === undefined ? null : Number(parentIdParam);
 
     try {
+        if (parentId !== null) {
+          const folderExists = await prisma.entity.findFirst({
+            where: {
+              id: parentId,
+              userId: userId,
+              type: "FOLDER",
+            },
+          });
+        
+          if (!folderExists) {
+            return res.status(404).json({ error: "Folder does not exist" });
+          }
+        }
         const userEntities = await prisma.entity.findMany({
             where: {
                 userId: userId,

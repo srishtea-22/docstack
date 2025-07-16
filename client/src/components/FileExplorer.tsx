@@ -8,6 +8,7 @@ import FolderNode from "./FolderNode";
 import { Folder } from '@/lib/types';
 import { Entity } from '@/lib/types';
 import Image from "next/image";
+import Link from 'next/link';
 
 export default function FileExplorer({ parentId }: { parentId: string | null }) {
   const [username, setUsername] = useState<string | null>(null);
@@ -29,7 +30,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   const [selectedFile, setSelectedFile] = useState<Entity | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<Entity[]>([]);
   const [folderTree, setFolderTree] = useState<Folder[]>([]);
-  const [isDeletingFolder, setIsDeletingFolder] = useState(false);
+  const [deletingFolderId, setDeletingFolderId] = useState<number | null>(null);
   const router = useRouter();
   const params = useParams();
   const folderId = params?.id ?? null;
@@ -38,11 +39,14 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/user`, {
       credentials: "include",
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Not logged in");
-        return res.json();
+      .then(async (res) => {
+        if (!res.ok) {
+          setUsername(null);
+          return;
+        }
+        const data = await res.json();
+        setUsername(data.user.username);
       })
-      .then((data) => setUsername(data.user.username))
       .catch(() => setUsername(null))
       .finally(() => setLoading(false));
   }, []);
@@ -50,25 +54,30 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   useEffect(() => {
     if (username) {
       setLoadingEntities(true);
-      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/fetch?parentId=${parentId ?? ""}`, {
+      const query = parentId !== null ? `?parentId=${parentId}` : "";
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/fetch${query}`, {
         credentials: "include",
       })
-      .then((res) => {
-        if (!res.ok) throw new Error("failed to fetch files");
-        return res.json();
-      })
-      .then((data: Entity[]) => {
-        setUserEntities(data);
-      })
-      .catch((error) => {
-        console.error("error fetching files ", error);
-        setEntitiesError(error.message || "could not load files");
-      })
-      .finally(() => {
-        setLoadingEntities(false);
-      })
-    }
-    else if (!loading) {
+        .then(async (res) => {
+          if (!res.ok) {
+            const errorData = await res.json();
+            setEntitiesError(errorData.error || "Failed to fetch files.");
+            setUserEntities([]);
+            return;
+          }
+          const data: Entity[] = await res.json();
+          setUserEntities(data);
+          setEntitiesError(null); 
+        })
+        .catch((error) => {
+          console.error("error fetching files", error);
+          setEntitiesError(error.message || "Could not load files");
+          setUserEntities([]);
+        })
+        .finally(() => {
+          setLoadingEntities(false);
+        });
+    } else if (!loading) {
       setUserEntities([]);
       setLoadingEntities(false);
     }
@@ -116,7 +125,9 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
 
   const handleFileUpload = async (e: FormEvent) => {
     e.preventDefault();
-    if (!uploadState.file) return;
+    if (!uploadState.file){
+      setUploadState(prev => ({...prev, fileUploading: false}));
+      return};
 
     setUploadState(prev => ({...prev, fileUploading: true}));
 
@@ -175,13 +186,14 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
 
   if (loading) return (
     <div className="flex items-center justify-center h-screen w-screen">
-      <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
+      <div className="h-10 w-10 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   if (!username) return (
-    <div className="flex items-center justify-center h-screen w-screen">
+    <div className="flex items-center justify-center h-screen w-screen flex-col font-[family-name:var(--font-geist-mono)]">
       <h1 className="text-red-500 font-[family-name:var(--font-geist-mono)]">You are not logged in!</h1>
+      <Link href="/login" className="mx-auto mt-2 w-fit text-sm text-white px-4 py-2 border border-white rounded-2xl hover:text-black hover:bg-white transition duration-300 cursor-pointer"> Back to Log In</Link>
     </div>
   )
 
@@ -243,7 +255,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
           <nav className="ml-4 mt-2 text-l">
             <a href="/home" className="hover:text-orange-500">Home</a>
             {" > "}
-            {breadcrumbs.map((folder, i) => (
+            {!entitesError && breadcrumbs.map((folder, i) => (
               <span key={folder.id}>
                 <a href={`/home/folder/${folder.id}`} className="hover:text-orange-500">
                   {folder.name}
@@ -264,12 +276,22 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
             <div className="flex-1 overflow-auto text-lg bg-[#1b1b1b] mt-8 mr-4 rounded-2xl p-4">
             {loadingEntites ? (
               <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
+                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : entitesError ? (
-              <p>{entitesError}</p>
+              <div className="flex items-center justify-center flex-col h-full gap-4">
+                <Image
+                  src="/nofolder.png"
+                  alt="Empty folder illustration"
+                  className="object-contain" 
+                  priority 
+                  height="100"
+                  width="100"
+                />
+                <p>Folder does not exist</p>
+              </div>
             ) : userEntities.length === 0 ? (
-              <div className="flex items-center justify-center flex-col mt-40">
+              <div className="flex items-center justify-center flex-col h-full">
                 <Image
                   src="/empty.png"
                   alt="Empty folder illustration"
@@ -284,7 +306,7 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                 <div className="grid grid-cols-1 gap-4">
                   <div className="p-4 grid grid-cols-[4fr_1fr_1fr_auto] gap-2">
                     <p className="text-base">Name</p>
-                    <p className="text-sm">Size</p>
+                    <p className="text-sm -pr-2">Size</p>
                     <p className="text-sm">Created</p>
                     <span className="block w-[24px]" />
                     </div>
@@ -309,10 +331,10 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
                         <button className="cursor-pointer peer" 
                           onClick={(e) => {
                             e.stopPropagation();
-                            setIsDeletingFolder(true);
-                              handleFolderDelete(entity.id).finally(() => setIsDeletingFolder(false));
+                            setDeletingFolderId(entity.id);
+                              handleFolderDelete(entity.id).finally(() => setDeletingFolderId(null));
                           }}>
-                            {isDeletingFolder ? (
+                            {deletingFolderId === entity.id ? (
                               <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                             ) : (
                               <svg
