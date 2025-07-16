@@ -11,10 +11,10 @@ import fileActionRoutes from "./routes/fileActions.js"
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
 app.use(cors({
-  origin: "http://localhost:3000", 
+  origin: process.env.FRONTEND_URL, 
   credentials: true
 }));
 
@@ -27,7 +27,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         httpOnly: true,
-        secure: false,          // true in production
+        secure: process.env.NODE_ENV === "production",
         maxAge: 1000 * 60 * 60 * 24,
         sameSite: "lax",
     },

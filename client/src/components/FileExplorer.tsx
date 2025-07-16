@@ -185,13 +185,13 @@ export default function FileExplorer({ parentId }: { parentId: string | null }) 
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center h-screen w-screen">
+    <div className="flex items-center justify-center h-screen w-screen bg-black">
       <div className="h-10 w-10 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   if (!username) return (
-    <div className="flex items-center justify-center h-screen w-screen flex-col font-[family-name:var(--font-geist-mono)]">
+    <div className="flex items-center justify-center h-screen w-screen flex-col font-[family-name:var(--font-geist-mono)] bg-black">
       <h1 className="text-red-500 font-[family-name:var(--font-geist-mono)]">You are not logged in!</h1>
       <Link href="/login" className="mx-auto mt-2 w-fit text-sm text-white px-4 py-2 border border-white rounded-2xl hover:text-black hover:bg-white transition duration-300 cursor-pointer"> Back to Log In</Link>
     </div>
