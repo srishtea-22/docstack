@@ -17,6 +17,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -37,7 +38,7 @@ export default function LoginForm() {
     e.preventDefault();
     setErrors([]);
     setServerError("");
-
+    setLoading(true)
     try {
       loginSchema.parse(formData);
 
@@ -62,6 +63,9 @@ export default function LoginForm() {
       else {
         setServerError("Something went wrong");
       }
+    }
+    finally {
+      setLoading(false);
     }
   };
 
@@ -126,9 +130,9 @@ export default function LoginForm() {
 
               <button
                 type="submit"
-                className="group/btn relative block h-10 w-full rounded-md font-medium text-white  bg-zinc-800 from-zinc-900 to-zinc-900 shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset] cursor-pointer"
+                className="group/btn relative block h-10 w-full rounded-md font-medium text-white  bg-zinc-800 from-zinc-900 to-zinc-900 shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset] cursor-pointer flex items-center justify-center"
               >
-                Login
+                {loading ? <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "Login"}
                 <BottomGradient />
               </button>
 

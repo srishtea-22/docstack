@@ -22,6 +22,7 @@ type SignUpFormData = z.infer<typeof signupSchema>;
 
 export default function SignupForm() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState<SignUpFormData>({
     username: "",
@@ -44,7 +45,7 @@ export default function SignupForm() {
     e.preventDefault();
     setErrors([]);
     setServerError("");
-
+    setLoading(true);
     try {
       signupSchema.parse(formData);
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/signup`, {
@@ -71,6 +72,9 @@ export default function SignupForm() {
       else {
         setServerError("Something went wrong")
       }
+    }
+    finally {
+      setLoading(false);
     }
   };
 
@@ -163,13 +167,13 @@ export default function SignupForm() {
                   <p className="text-red-500 text-sm mb-4 text-center">{serverError}</p>
                 )}
                 
-                <button
-                  className="group/btn relative block h-10 w-full rounded-md font-medium text-white bg-zinc-800 from-zinc-900 to-zinc-900 shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset] cursor-pointer"
-                  type="submit"
-                >
-                  Sign up
-                  <BottomGradient />
-                </button>
+              <button
+                type="submit"
+                className="group/btn relative block h-10 w-full rounded-md font-medium text-white  bg-zinc-800 from-zinc-900 to-zinc-900 shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset] cursor-pointer flex items-center justify-center"
+              >
+                {loading ? <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "Signup"}
+                <BottomGradient />
+              </button>
                 
                 <div className="my-8 h-[1px] w-full bg-gradient-to-r from-transparent to-transparent via-neutral-700" />
                 
