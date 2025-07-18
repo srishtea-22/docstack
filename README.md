@@ -8,4 +8,10 @@ A web-based file storage and management app where users can upload, preview, dow
 - Database - PostgreSQL with Prisma ORM
 - Storage - Supabase  
 
-![App Screenshot](./screenshots/app_img.png)
+Try it out here - 
+⚠️ This app requires third-party cookies to be enabled in your browser because the frontend and backend are deployed on different domains.
+
+Don't want to bother? Watch the demo video - 
+
+https://github.com/user-attachments/assets/0d8ff578-28a5-42b8-b1a2-ba33bf4ccb7c
+
