@@ -8,8 +8,10 @@ A web-based file storage and management app where users can upload, preview, dow
 - Database - PostgreSQL with Prisma ORM
 - Storage - Supabase  
 
-Try it out here - 
+Try it out here - https://docstack-kohl.vercel.app
+
 ⚠️ This app requires third-party cookies to be enabled in your browser because the frontend and backend are deployed on different domains.
+
 
 Don't want to bother? Watch the demo video - 
 
